@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const querystring = require("querystring");
 const axios = require("axios");
-const User = require('../models/userModel'); 
+const User = require('../Models/userModel'); 
 require("dotenv").config();
 
 const client_id = process.env.SPOTIFY_CLIENT_ID; 
@@ -74,24 +74,5 @@ router.get("/callback", async (req, res) => {
         res.status(500).send('Error authenticating with Spotify: ' + error.message);
     }
 });
-
-
-router.post('/create', async (req, res) => {
-    const { name, groupCode } = req.body;
-
-    const newGroup = new Group({
-        name,
-        groupCode,
-        members: [],
-    });
-
-    try {
-        await newGroup.save();
-        res.status(201).json({ message: 'Group created', group: newGroup });
-    } catch (err) {
-        res.status(500).json({ error: 'Error creating group' });
-    }
-});
-
 
 module.exports = router;

@@ -2,31 +2,13 @@ const Group = require('./models/Group'); // Assuming the Group model is in model
 const User = require('./models/User');
 
 // Controller to handle group creation
-const createGroup = async (req, res) => {
-    const { groupName, userId } = req.body;
 
-    // Generate a unique group code
-    const groupCode = Math.random().toString(36).substr(2, 8);  // Simple random code generator
-
-    try {
-        // Create a new group document
-        const newGroup = new Group({
-            groupName,
-            groupCode,
-            members: [userId]  // Add the user who created the group
-        });
-        await newGroup.save();
-
-        // Add the group to the user's document
-        await User.findByIdAndUpdate(userId, {
-            $push: { groups: newGroup._id }
-        });
-
-        res.json({ message: 'Group created', group: newGroup });
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to create group' });
-    }
+const generateGroupCode = () => {
+    return Math.random().toString(36).substr(2, 8).toUpperCase();
 };
+
+
+
 
 
 const joinGroup = async (req, res) => {
