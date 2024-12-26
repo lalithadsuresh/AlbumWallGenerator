@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate for navigation
 import axios from 'axios';
 
 const JoinGroup = () => {
   const [groupCode, setGroupCode] = useState(''); // State for group code input
   const [message, setMessage] = useState(''); // State for status messages
+  const navigate = useNavigate(); 
 
   const joinGroup = async () => {
     if (!groupCode) {
-      setMessage('Please enter a group name!');
+      setMessage('Please enter a group code!');
       return;
     }
   
@@ -29,10 +31,9 @@ const JoinGroup = () => {
         }
       );
   
+      navigate(`/survey/${groupCode}`); 
       const data = response.data;
-  
-      // Handle success
-      setMessage(`Successfully joined group: ${data.group.name}`);
+
     } catch (error) {
       // Handle error response
       if (error.response) {

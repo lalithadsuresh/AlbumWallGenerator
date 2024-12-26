@@ -16,13 +16,13 @@ const UserSchema = new mongoose.Schema({
   // Surveys field: Stores survey responses for specific groups
   surveys: [
     {
-      groupCode: { type: String, required: true }, // Group the survey is for
+      groupCode: { type: String, required: true }, 
       answers: {
-        chill: { type: Number, min: 1, max: 5 }, // User's response for "chill"
-        energetic: { type: Number, min: 1, max: 5 }, // User's response for "energetic"
-        relaxed: { type: Number, min: 1, max: 5 }, // User's response for "relaxed"
-        happy: { type: Number, min: 1, max: 5 }, // User's response for "happy"
-        focused: { type: Number, min: 1, max: 5 }, // User's response for "focused"
+        chill: { type: Number, min: 1, max: 5 }, 
+        energetic: { type: Number, min: 1, max: 5 }, 
+        relaxed: { type: Number, min: 1, max: 5 }, 
+        happy: { type: Number, min: 1, max: 5 }, 
+        focused: { type: Number, min: 1, max: 5 }, 
       },
     },
   ],

@@ -12,39 +12,42 @@ router.post('/join', authMiddleware, async (req, res) => {
     const userId = req.user.id;
   
     try {
-      // Validate groupCode
+      // Find the group by groupCode
       const group = await Group.findOne({ groupCode });
       if (!group) {
         return res.status(404).json({ error: 'Group not found' });
       }
   
-      // Check if the user is already a member
-      if (group.members.includes(userId)) {
-        return res.status(400).json({ error: 'You are already a member of this group' });
+      // Prevent duplicate entries in the members array
+      if (!group.members.includes(userId)) {
+        group.members.push(userId); // Add user only if not already a member
+        await group.save();
       }
   
-      // Add user to the group's members
-      group.members.push(userId);
-  
-      // Add groupCode to the user's groupCodes
+      // Ensure groupCode is in the user's groupCodes array
       const user = await User.findById(userId);
       if (!user) {
         return res.status(404).json({ error: 'User not found' });
       }
+  
       user.groupCodes = user.groupCodes || [];
       if (!user.groupCodes.includes(groupCode)) {
         user.groupCodes.push(groupCode);
+        await user.save();
       }
   
-      await group.save();
-      await user.save();
-  
-      res.status(200).json({ message: 'Successfully joined group', groupCode });
+      // Redirect to survey page
+      res.status(200).json({
+        message: 'Successfully joined group',
+        groupCode,
+      });
     } catch (error) {
       console.error('Error joining group:', error);
       res.status(500).json({ error: 'An error occurred while joining the group' });
     }
   });
+  
+  
 
 router.post('/submit', async (req, res) => {
     const { groupCode, energy } = req.body;
@@ -65,7 +68,7 @@ router.post('/submit', async (req, res) => {
 
   router.post('/create-group', authMiddleware, async (req, res) => {
     try {
-      const { groupName, groupCode } = req.body;
+      const { groupName } = req.body;
   
       if (!groupName) {
         return res.status(400).json({ error: 'Group name is required' });
@@ -73,20 +76,34 @@ router.post('/submit', async (req, res) => {
   
       const userId = req.user.id;
   
-      // Generate a unique groupCode if not provided
-      const uniqueGroupCode = groupCode || Math.random().toString(36).substr(2, 8);
+      // Generate a unique groupCode
+      let uniqueGroupCode = Math.random().toString(36).substr(2, 8);
+      let isUnique = false;
   
+      while (!isUnique) {
+        const existingGroup = await Group.findOne({ groupCode: uniqueGroupCode });
+        if (!existingGroup) {
+          isUnique = true;
+        } else {
+          console.log(`Duplicate group code detected: ${uniqueGroupCode}`);
+          uniqueGroupCode = Math.random().toString(36).substr(2, 8);
+        }
+      }
+  
+      console.log(`Final unique group code: ${uniqueGroupCode}`);
+  
+      // Create the new group
       const newGroup = new Group({
         name: groupName,
         groupCode: uniqueGroupCode,
         createdBy: userId,
-        members: [userId],
+        members: [userId], // Add the creator only once
         createdAt: Date.now(),
       });
-
+  
       const user = await User.findById(userId);
       user.groupCodes = user.groupCodes || [];
-      user.groupCodes.push(groupCode);
+      user.groupCodes.push(uniqueGroupCode);
       await user.save();
       await newGroup.save();
   
@@ -96,12 +113,16 @@ router.post('/submit', async (req, res) => {
       });
     } catch (error) {
       if (error.code === 11000) {
-        return res.status(400).json({ error: 'Group code must be unique' });
+        console.error('Duplicate groupCode error:', error);
+        return res.status(400).json({ error: 'Group code must be unique. Please try again.' });
       }
-      console.error('Error creating group:', error.message);
+      console.error('Error creating group:', error.stack);
       res.status(500).json({ error: 'Failed to create group' });
     }
   });
+  
+  
+  
   
 
 router.get('/current-user', authMiddleware, async (req, res) => {
@@ -120,83 +141,76 @@ router.get('/current-user', authMiddleware, async (req, res) => {
   });
 
 
-  router.post('/submit-survey', authMiddleware, async (req, res) => {
-    const { groupCode, answers } = req.body;
+  router.get('/group-averages/:groupCode', authMiddleware, async (req, res) => {
+    const { groupCode } = req.params;
+  
+    try {
+      const users = await User.find({ 'surveys.groupCode': groupCode });
+  
+      // Extract all survey responses for the group
+      const surveys = [];
+      users.forEach((user) => {
+        const survey = user.surveys.find((s) => s.groupCode === groupCode);
+        if (survey) {
+          surveys.push(survey.answers);
+        }
+      });
+  
+      if (surveys.length === 0) {
+        return res.status(400).json({ error: 'No survey responses found for this group' });
+      }
+  
+      // Calculate averages
+      const aggregated = surveys.reduce(
+        (totals, response) => {
+          for (const key in response) {
+            totals[key] = (totals[key] || 0) + response[key];
+          }
+          return totals;
+        },
+        {}
+      );
+  
+      const averages = {};
+      const totalResponses = surveys.length;
+      for (const key in aggregated) {
+        averages[key] = aggregated[key] / totalResponses;
+      }
+  
+      res.status(200).json({ groupCode, averages });
+      console.log(groupCode);
+    } catch (error) {
+      console.error('Error calculating group averages:', error);
+      res.status(500).json({ error: 'An error occurred while calculating averages' });
+    }
+  });
+
+
+
+  // In your routes file
+router.post('/generate-playlist', authMiddleware, async (req, res) => {
+    const { groupCode } = req.body;
     const userId = req.user.id;
   
     try {
-      if (!groupCode || !answers) {
-        return res.status(400).json({ error: 'Group code and answers are required' });
-      }
-  
-      // Validate answers
-      const validKeys = ['chill', 'energetic', 'relaxed', 'happy', 'focused'];
-      for (const key of validKeys) {
-        if (!answers[key] || answers[key] < 1 || answers[key] > 5) {
-          return res.status(400).json({ error: `Invalid value for ${key}. Must be between 1 and 5.` });
-        }
-      }
-  
-      // Find the group
-      const group = await Group.findOne({ groupCode });
-      if (!group) {
-        return res.status(404).json({ error: 'Group not found' });
-      }
-  
-      // Check if the user is a member
-      if (!group.members.includes(userId)) {
-        return res.status(403).json({ error: 'You are not a member of this group' });
-      }
-  
-      // Check if the user has already submitted a response
-      const existingResponse = group.surveyResponses.find(
-        (response) => response.userId.toString() === userId
-      );
-      if (existingResponse) {
-        return res.status(400).json({ error: 'You have already submitted the survey' });
-      }
-  
-      // Add the user's survey response
-      group.surveyResponses.push({ userId, answers });
-      await group.save();
-  
-      // Check if all members have submitted
-      if (group.surveyResponses.length === group.members.length) {
-        group.surveyCompleted = true; // Mark survey as complete
-  
-        // Calculate averages
-        const aggregatedResponses = group.surveyResponses.reduce(
-          (totals, response) => {
-            for (const key in response.answers) {
-              totals[key] = (totals[key] || 0) + response.answers[key];
-            }
-            return totals;
-          },
-          {}
-        );
-  
-        const averages = {};
-        const totalResponses = group.surveyResponses.length;
-        for (const key in aggregatedResponses) {
-          averages[key] = aggregatedResponses[key] / totalResponses;
-        }
-  
-        await group.save();
-  
-        // Trigger playlist generation with averages
-        const playlist = await createPlaylistForGroup(averages);
-        return res.status(200).json({
-          message: 'Survey completed and playlist generated!',
-          playlist,
-        });
-      }
-  
-      res.status(200).json({ message: 'Survey response submitted successfully' });
+      const user = await User.findById(userId);
+      const surveyHandler = new GroupSurveyHandler();
+      
+      // Create the playlist
+      const playlistDetails = await surveyHandler.createGroupPlaylist(groupCode, user);
+      
+      res.status(200).json({
+        message: 'Playlist created successfully',
+        playlist: playlistDetails
+      });
     } catch (error) {
-      console.error('Error submitting survey:', error);
-      res.status(500).json({ error: 'An error occurred while submitting the survey' });
+      console.error('Error generating playlist:', error);
+      res.status(500).json({ error: 'Failed to generate playlist' });
     }
   });
+  
+
+
   
 
 

@@ -11,6 +11,8 @@ const redirect_uri = process.env.SPOTIFY_REDIRECT_URI;
 const axios = require("axios");
 const jwt = require('jsonwebtoken');
 const User = require('../Models/userModel');
+const GroupSurveyHandler = require('../utils/GroupSurveyHandler');
+const surveyHandler = new GroupSurveyHandler();
 
 // Route to redirect the user to Spotify's login page
 router.get("/login", (req, res) => {
@@ -143,6 +145,69 @@ router.get('/profile', authMiddleware, refreshTokenMiddleware, async (req, res) 
         res.status(500).json({ error: 'Failed to fetch Spotify profile' });
     }
 });
+
+
+
+
+
+router.post('/submit-survey', authMiddleware, async (req, res) => {
+    const { groupCode, answers } = req.body;
+    console.log(req.body);
+    const userId = req.user.id;
+  
+    try {
+      if (!groupCode || !answers) {
+        return res.status(400).json({ error: 'Group code and answers are required' });
+      }
+  
+      // Validate answers
+      const validKeys = ['chill', 'energetic', 'relaxed', 'happy', 'focused'];
+      for (const key of validKeys) {
+        if (!answers[key] || answers[key] < 1 || answers[key] > 5) {
+          return res.status(400).json({ error: `Invalid value for ${key}. Must be between 1 and 5.` });
+        }
+      }
+  
+      // Find the user
+      const user = await User.findById(userId);
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      user.surveys.push({ groupCode, answers });
+      await user.save();
+
+      const groupStatus = await surveyHandler.checkGroupCompletion(groupCode);
+
+      if (groupStatus.complete) {
+        const { averages } = await surveyHandler.calculateGroupMoodScores(groupCode);
+        console.log(averages);
+        
+        const spotifyParams = surveyHandler.generateSpotifyParameters(averages);
+
+        console.log(spotifyParams);
+
+        res.status(200).json({
+            message: 'Survey submitted successfully - Group complete!',
+            playlistParams: spotifyParams
+          });
+        } else {
+          res.status(200).json({
+            message: 'Survey submitted successfully',
+            remaining: groupStatus.totalMembers - groupStatus.submittedCount
+          });
+          console.log(groupStatus.totalMembers);
+          console.log(groupStatus.totalMembers);
+        }
+      } catch (error) {
+        console.error('Error submitting survey:', error);
+        res.status(500).json({ error: 'An error occurred while submitting the survey' });
+      }
+    });
+  
+
+
+
 
 
 

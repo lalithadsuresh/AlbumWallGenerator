@@ -5,6 +5,8 @@ import CreateGroup from './components/CreateGroup';
 import JoinGroup from './components/JoinGroup';
 import Survey from './components/Survey';
 import Login from './components/Login';
+import Playlist from './components/Playlist';
+
 
 function App() {
   return (
@@ -15,7 +17,8 @@ function App() {
           <Route path="/join-group" element={<JoinGroup />} />
           <Route path="/group-survey" element={<Survey />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/survey" element={<Survey />} />
+          <Route path="/survey/:groupCode" element={<Survey />} />
+          <Route path="/playlist/:groupCode" element={<Playlist />} />
         </Routes>
       </Router>
     </AuthProvider>

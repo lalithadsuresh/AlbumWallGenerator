@@ -2,11 +2,13 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 // Group schema
-const GroupSchema = new Schema({
-    groupCode: { type: String, unique: true, required: true },  // Group name
-    groupCode: { type: String, unique: true },    // Unique group code for joining
-    members: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],  // Members of the group (reference to User)
+const GroupSchema = new mongoose.Schema({
+  groupCode: { type: String, unique: true, required: true },
+  name: { type: String, required: true },
+  members: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], // No unique constraint
+  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  createdAt: { type: Date, default: Date.now },
 });
-
-const Group = mongoose.model('Group', GroupSchema);
-module.exports = Group;
+  
+  module.exports = mongoose.model('Group', GroupSchema);
+  

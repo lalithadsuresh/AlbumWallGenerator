@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom'; // Import useParams for dynamic routing
 import axios from 'axios';
 
-const Survey = ({ groupCode }) => {
+const Survey = ({ groupCode: propGroupCode }) => {
+  // If groupCode is passed as a prop, use it; otherwise, get it from the URL
+  const { groupCode: routeGroupCode } = useParams();
+  const groupCode = propGroupCode || routeGroupCode;
+
   const [answers, setAnswers] = useState({
     chill: 0,
     energetic: 0,
@@ -24,7 +29,7 @@ const Survey = ({ groupCode }) => {
       }
     };
 
-    fetchSurveyStatus();
+    if (groupCode) fetchSurveyStatus();
   }, [groupCode]);
 
   // Handle input changes for each survey question
@@ -47,8 +52,8 @@ const Survey = ({ groupCode }) => {
     setLoading(true);
     try {
       const response = await axios.post(
-        'http://localhost:5000/api/groups/submit-survey',
-        { groupCode, answers },
+        'http://localhost:5000/api/users/submit-survey',
+        { groupCode, answers }, // Include groupCode in the request body
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -70,6 +75,10 @@ const Survey = ({ groupCode }) => {
       setLoading(false);
     }
   };
+
+  if (!groupCode) {
+    return <p>Error: Group code is missing. Please try again.</p>;
+  }
 
   if (surveyCompleted) {
     return <p>The survey is complete! A playlist has been generated.</p>;
