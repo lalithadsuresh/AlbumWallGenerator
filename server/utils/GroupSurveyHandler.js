@@ -38,6 +38,7 @@ class GroupSurveyHandler {
         Object.keys(moodTotals).forEach((key) => (moodTotals[key] += survey[key] || 0))
       );
 
+      // show averages
       const averages = {};
       Object.keys(moodTotals).forEach(
         (key) => (averages[key] = Number((moodTotals[key] / groupSurveys.length).toFixed(2)))
