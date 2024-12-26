@@ -25,7 +25,9 @@ app.get("/", function(req, res) {
 
 
 
-mongoose.connect('mongodb+srv://lalithsuresh:kNmXmn77FJG3gdPY@cluster0.wy7zi.mongodb.net/PlaylistGenerator?retryWrites=true&w=majority&appName=Cluster0', {
+
+mongoose.connect(uri, {
+
 }).then(function() {
     console.log("MongoDB connection established" + mongoose.connection.db.databaseName);
 }).catch(function(error) {

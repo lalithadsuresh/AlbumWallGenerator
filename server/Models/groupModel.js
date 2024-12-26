@@ -3,7 +3,7 @@ const Schema = mongoose.Schema;
 
 // Group schema
 const GroupSchema = new Schema({
-    groupName: { type: String, required: true },  // Group name
+    groupCode: { type: String, unique: true, required: true },  // Group name
     groupCode: { type: String, unique: true },    // Unique group code for joining
     members: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],  // Members of the group (reference to User)
 });

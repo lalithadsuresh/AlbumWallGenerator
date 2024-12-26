@@ -7,38 +7,45 @@ const JoinGroup = () => {
 
   const joinGroup = async () => {
     if (!groupCode) {
-      setMessage('Please enter a group code!');
+      setMessage('Please enter a group name!');
       return;
     }
-
+  
+    const token = localStorage.getItem('token'); // Retrieve the user's token
+    if (!token) {
+      setMessage('Please log in to join a group.');
+      return;
+    }
+  
     try {
-      // Replace this URL with your backend API endpoint
       const response = await axios.post(
         'http://localhost:5000/api/groups/join',
         { groupCode }, // Request body
-        { headers: { 'Content-Type': 'application/json' } } // Configuration object with headers
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Include the token for authentication
+            'Content-Type': 'application/json',
+          },
+        }
       );
-    
-      // `response.data` contains the JSON payload from the server
+  
       const data = response.data;
-    
+  
       // Handle success
-      setMessage(`Successfully joined group: ${data.group.groupName}`);
+      setMessage(`Successfully joined group: ${data.group.name}`);
     } catch (error) {
       // Handle error response
       if (error.response) {
-        // The request was made and the server responded with a non-2xx status code
         setMessage(error.response.data.error || 'Failed to join the group');
       } else if (error.request) {
-        // The request was made but no response was received
         setMessage('No response from server.');
       } else {
-        // Something else happened during the request setup
         setMessage('An error occurred while trying to join the group.');
       }
       console.error('Error:', error);
     }
-  }
+  };
+  
 
   return (
     <div>
