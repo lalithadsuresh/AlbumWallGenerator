@@ -11,7 +11,7 @@ function isTokenValid(user) {
     return false;
   }
   return user.tokenExpiry.getTime() > Date.now(); // Convert Date to timestamp for comparison
-}
+} 
 // Utility function to handle token refresh
 async function refreshUserToken(user) {
   if (!user?.refreshToken) {
@@ -188,18 +188,61 @@ class GroupSurveyHandler {
         params: { limit: 50, time_range: 'medium_term' }
       });
 
+
       if (!response?.data?.items?.length) {
         console.warn(`No top tracks found for user ${user._id}`);
         return [];
       }
 
-      return response.data.items.map(track => ({
-        id: track.id,
-        name: track.name,
-        artists: track.artists.map(artist => artist.name),
-        uri: track.uri,
-        popularity: track.popularity
-      }));
+      const topTracks = response.data.items;
+
+      const trackIds = topTracks.map(track => track.id).join(',');
+
+      const batchSize = 100;
+      const trackIdBatches = [];
+      for (let i = 0; i < topTracks.length; i += batchSize) {
+        trackIdBatches.push(topTracks.slice(i, i + batchSize).map(track => track.id));
+      }
+
+      const audioFeaturesResponses = await Promise.all(
+        trackIdBatches.map(async (batch) => {
+          try {
+            const response = await axios.get('https://api.spotify.com/v1/audio-features', {
+              headers: { Authorization: `Bearer ${currentToken}` },
+              params: { ids: batch.join(',') }
+            });
+            return response.data.audio_features || [];
+          } catch (error) {
+            console.error(`Error fetching audio features for batch:`, error.message);
+            return [];
+          }
+        })
+      );
+
+      const audioFeatures = audioFeaturesResponses.flat();
+
+      // Combine tracks with their audio features
+      const combinedTracks = topTracks.map(track => {
+        const features = audioFeatures.find(feature => feature?.id === track.id);
+        return {
+          id: track.id,
+          name: track.name,
+          artists: track.artists.map(artist => artist.name),
+          uri: track.uri,
+          popularity: track.popularity,
+          danceability: features?.danceability || null,
+          energy: features?.energy || null,
+          valence: features?.valence || null,
+          tempo: features?.tempo || null,
+          acousticness: features?.acousticness || null,
+          instrumentalness: features?.instrumentalness || null
+        };
+      });
+
+      return combinedTracks;
+
+      // you need to request another endpoint to analyze
+      // track's danceability, valence etc., not here!
 
     } catch (error) {
       console.error(`Error getting top tracks for user ${user._id}:`, error);
@@ -224,13 +267,18 @@ class GroupSurveyHandler {
 
       const { averages } = await this.calculateGroupMoodScores(groupCode);
       const spotifyParams = this.generateSpotifyParameters(averages);
+      console.log(spotifyParams);
 
-      const userTracksPromises = users.map(user => this.getUserTopTracks(user));
+      const userTracksPromises = users.map(user => this.getUserTopTracks(user))
       const userTracksList = await Promise.allSettled(userTracksPromises);
+
+      console.log(userTracksList);
 
       const allTracks = userTracksList
         .filter(result => result.status === 'fulfilled')
         .flatMap(result => result.value);
+
+      console.log(allTracks);
 
       if (!allTracks.length) {
         throw new Error('No tracks found for any users in the group');

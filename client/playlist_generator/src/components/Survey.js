@@ -3,7 +3,6 @@ import { useParams } from 'react-router-dom'; // Import useParams for dynamic ro
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom'; 
 
-
 const Survey = ({ groupCode: propGroupCode }) => {
   // If groupCode is passed as a prop, use it; otherwise, get it from the URL
   const { groupCode: routeGroupCode } = useParams();
@@ -16,6 +15,7 @@ const Survey = ({ groupCode: propGroupCode }) => {
     relaxed: 0,
     happy: 0,
     focused: 0,
+    playlistType: '',
   });
   const [message, setMessage] = useState('');
   const [surveyCompleted, setSurveyCompleted] = useState(false);
@@ -40,7 +40,7 @@ const Survey = ({ groupCode: propGroupCode }) => {
     const { name, value } = e.target;
     setAnswers((prev) => ({
       ...prev,
-      [name]: Number(value),
+      [name]: name === 'playlistType' ? value : Number(value), // Handle playlistType as a string
     }));
   };
 
@@ -82,7 +82,6 @@ const Survey = ({ groupCode: propGroupCode }) => {
       setLoading(false);
     }
   };
-  
 
   if (!groupCode) {
     return <p>Error: Group code is missing. Please try again.</p>;
@@ -157,6 +156,45 @@ const Survey = ({ groupCode: propGroupCode }) => {
         />
       </div>
 
+      <div>
+  <label>What is the vibe for this playlist?</label>
+  <div>
+    <label>
+      <input
+        type="radio"
+        name="playlistType"
+        value="sports practice"
+        checked={answers.playlistType === 'sports practice'}
+        onChange={handleChange}
+      />
+      Sports Practice
+    </label>
+  </div>
+  <div>
+    <label>
+      <input
+        type="radio"
+        name="playlistType"
+        value="lowkey vibe"
+        checked={answers.playlistType === 'lowkey vibe'}
+        onChange={handleChange}
+      />
+      Lowkey Chillout
+    </label>
+  </div>
+  <div>
+    <label>
+      <input
+        type="radio"
+        name="playlistType"
+        value="party"
+        checked={answers.playlistType === 'party'}
+        onChange={handleChange}
+      />
+      Hype Party
+    </label>
+  </div>
+</div>
       <button onClick={submitSurvey} disabled={loading}>
         {loading ? 'Submitting...' : 'Submit Survey'}
       </button>
