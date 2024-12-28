@@ -16,7 +16,14 @@ const surveyHandler = new GroupSurveyHandler();
 
 // Route to redirect the user to Spotify's login page
 router.get("/login", (req, res) => {
-    const scope = 'user-read-private user-read-email';
+    const scope = [
+        'user-read-private', 
+        'user-read-email', 
+        'playlist-modify-private', 
+        'playlist-modify-public', 
+        'user-top-read'
+    ].join(' '); // Joining scopes as a space-separated string, required by Spotify.
+
     const spotifyAuthUrl = 'https://accounts.spotify.com/authorize?' + querystring.stringify({
         response_type: 'code',
         client_id: client_id,
@@ -147,63 +154,61 @@ router.get('/profile', authMiddleware, refreshTokenMiddleware, async (req, res) 
 });
 
 
-
-
-
 router.post('/submit-survey', authMiddleware, async (req, res) => {
-    const { groupCode, answers } = req.body;
-    console.log(req.body);
-    const userId = req.user.id;
-  
-    try {
-      if (!groupCode || !answers) {
-        return res.status(400).json({ error: 'Group code and answers are required' });
+  const { groupCode, answers } = req.body;
+  const userId = req.user.id;
+
+  try {
+    if (!groupCode || !answers) {
+      return res.status(400).json({ error: 'Group code and answers are required' });
+    }
+
+    // Validate answers
+    const validKeys = ['chill', 'energetic', 'relaxed', 'happy', 'focused'];
+    for (const key of validKeys) {
+      if (answers[key] == null || answers[key] < 1 || answers[key] > 5) {
+        return res.status(400).json({ error: `Invalid value for ${key}. Must be between 1 and 5.` });
       }
-  
-      // Validate answers
-      const validKeys = ['chill', 'energetic', 'relaxed', 'happy', 'focused'];
-      for (const key of validKeys) {
-        if (!answers[key] || answers[key] < 1 || answers[key] > 5) {
-          return res.status(400).json({ error: `Invalid value for ${key}. Must be between 1 and 5.` });
-        }
-      }
-  
-      // Find the user
-      const user = await User.findById(userId);
-      if (!user) {
-        return res.status(404).json({ error: 'User not found' });
-      }
+    }
 
-      user.surveys.push({ groupCode, answers });
-      await user.save();
+    // Find the user
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
 
-      const groupStatus = await surveyHandler.checkGroupCompletion(groupCode);
+    // Save the survey to the user's record
+    user.surveys.push({ groupCode, answers });
+    await user.save();
 
-      if (groupStatus.complete) {
-        const { averages } = await surveyHandler.calculateGroupMoodScores(groupCode);
-        console.log(averages);
-        
-        const spotifyParams = surveyHandler.generateSpotifyParameters(averages);
+    // Check if the group is complete
+    const groupStatus = await surveyHandler.checkGroupCompletion(groupCode);
 
-        console.log(spotifyParams);
+    if (groupStatus.complete) {
+      // Calculate averages and generate Spotify parameters
+      const { averages } = await surveyHandler.calculateGroupMoodScores(groupCode);
+      const spotifyParams = surveyHandler.generateSpotifyParameters(averages);
 
-        res.status(200).json({
-            message: 'Survey submitted successfully - Group complete!',
-            playlistParams: spotifyParams
-          });
-        } else {
-          res.status(200).json({
-            message: 'Survey submitted successfully',
-            remaining: groupStatus.totalMembers - groupStatus.submittedCount
-          });
-          console.log(groupStatus.totalMembers);
-          console.log(groupStatus.totalMembers);
-        }
-      } catch (error) {
-        console.error('Error submitting survey:', error);
-        res.status(500).json({ error: 'An error occurred while submitting the survey' });
-      }
-    });
+      console.log('Group complete. Generated Spotify parameters:', spotifyParams);
+
+      return res.status(200).json({
+        message: 'Survey submitted successfully - Group complete!',
+        playlistParams: spotifyParams,
+      });
+    } else {
+      return res.status(200).json({
+        message: 'Survey submitted successfully',
+        remaining: groupStatus.totalMembers - groupStatus.submittedCount,
+      });
+    }
+  } catch (error) {
+    console.error('Error submitting survey:', error);
+    return res.status(500).json({ error: 'An error occurred while submitting the survey' });
+  }
+});
+
+module.exports = router;
+
   
 
 

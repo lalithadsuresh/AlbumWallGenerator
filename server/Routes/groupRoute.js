@@ -5,6 +5,7 @@ const Survey = require('../Models/surveyModel')
 const User = require('../Models/userModel');
 const authMiddleware = require('../utils/MiddlewareAuth'); 
 const refreshTokenMiddleware = require('../utils/RefreshToken'); 
+const GroupSurveyHandler = require('../utils/GroupSurveyHandler');
 
 
 router.post('/join', authMiddleware, async (req, res) => {
@@ -145,74 +146,82 @@ router.get('/current-user', authMiddleware, async (req, res) => {
     const { groupCode } = req.params;
   
     try {
-      const users = await User.find({ 'surveys.groupCode': groupCode });
+      const surveyHandler = new GroupSurveyHandler();
+      const moodScores = await surveyHandler.calculateGroupMoodScores(groupCode);
   
-      // Extract all survey responses for the group
-      const surveys = [];
-      users.forEach((user) => {
-        const survey = user.surveys.find((s) => s.groupCode === groupCode);
-        if (survey) {
-          surveys.push(survey.answers);
-        }
+      res.status(200).json({
+        groupCode,
+        averages: moodScores.averages,
+        totalResponses: moodScores.totalResponses,
+        individualScores: moodScores.individualScores
       });
   
-      if (surveys.length === 0) {
-        return res.status(400).json({ error: 'No survey responses found for this group' });
-      }
-  
-      // Calculate averages
-      const aggregated = surveys.reduce(
-        (totals, response) => {
-          for (const key in response) {
-            totals[key] = (totals[key] || 0) + response[key];
-          }
-          return totals;
-        },
-        {}
-      );
-  
-      const averages = {};
-      const totalResponses = surveys.length;
-      for (const key in aggregated) {
-        averages[key] = aggregated[key] / totalResponses;
-      }
-  
-      res.status(200).json({ groupCode, averages });
-      console.log(groupCode);
     } catch (error) {
       console.error('Error calculating group averages:', error);
+      
+      if (error.message === 'Group not found') {
+        return res.status(404).json({ error: 'Group not found' });
+      }
+      if (error.message === 'No surveys found for this group') {
+        return res.status(400).json({ error: 'No survey responses found for this group' });
+      }
+      
       res.status(500).json({ error: 'An error occurred while calculating averages' });
     }
   });
-
-
-
-  // In your routes file
-router.post('/generate-playlist', authMiddleware, async (req, res) => {
-    const { groupCode } = req.body;
+  
+  router.get('/generate-playlist/:groupCode', authMiddleware, async (req, res) => {
+    const { groupCode } = req.params;
     const userId = req.user.id;
   
     try {
       const user = await User.findById(userId);
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+  
       const surveyHandler = new GroupSurveyHandler();
-      
-      // Create the playlist
+  
+      // Check group completion
+      const groupStatus = await surveyHandler.checkGroupCompletion(groupCode);
+      if (!groupStatus.complete) {
+        return res.status(400).json({
+          error: 'Not all members have submitted surveys',
+          totalMembers: groupStatus.totalMembers,
+          submittedCount: groupStatus.submittedCount,
+          remainingMembers: groupStatus.remainingMembers
+        });
+      }
+  
+      // Generate the playlist
       const playlistDetails = await surveyHandler.createGroupPlaylist(groupCode, user);
-      
+  
+      console.log("Playlist generated successfully");
       res.status(200).json({
         message: 'Playlist created successfully',
-        playlist: playlistDetails
+        playlist: {
+          id: playlistDetails.playlistId,
+          url: playlistDetails.playlistUrl,
+          tracks: playlistDetails.tracks,
+          trackCount: playlistDetails.trackCount
+        }
       });
+  
     } catch (error) {
       console.error('Error generating playlist:', error);
+      
+      if (error.message === 'Group not found') {
+        return res.status(404).json({ error: 'Group not found' });
+      }
+      if (error.message === 'No recommended songs available') {
+        return res.status(400).json({ error: 'Unable to generate recommendations for this group' });
+      }
+      if (error.message === 'Invalid user object or missing Spotify ID') {
+        return res.status(400).json({ error: 'Invalid Spotify account connection' });
+      }
+      
       res.status(500).json({ error: 'Failed to generate playlist' });
     }
   });
   
-
-
-  
-
-
-module.exports = router;
-
+  module.exports = router;

@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom'; // Import useParams for dynamic routing
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom'; 
+
 
 const Survey = ({ groupCode: propGroupCode }) => {
   // If groupCode is passed as a prop, use it; otherwise, get it from the URL
   const { groupCode: routeGroupCode } = useParams();
   const groupCode = propGroupCode || routeGroupCode;
+  const navigate = useNavigate(); 
 
   const [answers, setAnswers] = useState({
     chill: 0,
@@ -48,12 +51,12 @@ const Survey = ({ groupCode: propGroupCode }) => {
       setMessage('Please log in to submit the survey.');
       return;
     }
-
+  
     setLoading(true);
     try {
       const response = await axios.post(
         'http://localhost:5000/api/users/submit-survey',
-        { groupCode, answers }, // Include groupCode in the request body
+        { groupCode, answers },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -61,11 +64,15 @@ const Survey = ({ groupCode: propGroupCode }) => {
           },
         }
       );
+  
       setMessage(response.data.message);
-
-      // Check if the survey is completed
-      if (response.data.playlist) {
-        console.log('Generated Playlist:', response.data.playlist);
+  
+      // Check if the group is complete and a playlist is generated
+      if (response.data.playlistParams) {
+        console.log('Navigating to playlist page with params:', response.data.playlistParams);
+        navigate(`/playlist/${groupCode}`, { state: { spotifyParams: response.data.playlistParams } });
+      } else if (response.data.remaining !== undefined) {
+        console.log(`Waiting for ${response.data.remaining} more submissions.`);
       }
     } catch (error) {
       setMessage(
@@ -75,6 +82,7 @@ const Survey = ({ groupCode: propGroupCode }) => {
       setLoading(false);
     }
   };
+  
 
   if (!groupCode) {
     return <p>Error: Group code is missing. Please try again.</p>;
