@@ -272,7 +272,6 @@ class GroupSurveyHandler {
       const userTracksPromises = users.map(user => this.getUserTopTracks(user))
       const userTracksList = await Promise.allSettled(userTracksPromises);
 
-      console.log(userTracksList);
 
       const allTracks = userTracksList
         .filter(result => result.status === 'fulfilled')

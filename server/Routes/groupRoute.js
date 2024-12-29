@@ -7,25 +7,21 @@ const authMiddleware = require('../utils/MiddlewareAuth');
 const refreshTokenMiddleware = require('../utils/RefreshToken'); 
 const GroupSurveyHandler = require('../utils/GroupSurveyHandler');
 
-
 router.post('/join', authMiddleware, async (req, res) => {
     const { groupCode } = req.body;
     const userId = req.user.id;
   
     try {
-      // Find the group by groupCode
       const group = await Group.findOne({ groupCode });
       if (!group) {
         return res.status(404).json({ error: 'Group not found' });
       }
   
-      // Prevent duplicate entries in the members array
       if (!group.members.includes(userId)) {
-        group.members.push(userId); // Add user only if not already a member
+        group.members.push(userId);
         await group.save();
       }
   
-      // Ensure groupCode is in the user's groupCodes array
       const user = await User.findById(userId);
       if (!user) {
         return res.status(404).json({ error: 'User not found' });
@@ -37,7 +33,6 @@ router.post('/join', authMiddleware, async (req, res) => {
         await user.save();
       }
   
-      // Redirect to survey page
       res.status(200).json({
         message: 'Successfully joined group',
         groupCode,
@@ -48,8 +43,6 @@ router.post('/join', authMiddleware, async (req, res) => {
     }
   });
   
-  
-
 router.post('/submit', async (req, res) => {
     const { groupCode, energy } = req.body;
   
@@ -66,8 +59,7 @@ router.post('/submit', async (req, res) => {
     }
   });
 
-
-  router.post('/create-group', authMiddleware, async (req, res) => {
+router.post('/create-group', authMiddleware, async (req, res) => {
     try {
       const { groupName } = req.body;
   
@@ -77,7 +69,6 @@ router.post('/submit', async (req, res) => {
   
       const userId = req.user.id;
   
-      // Generate a unique groupCode
       let uniqueGroupCode = Math.random().toString(36).substr(2, 8);
       let isUnique = false;
   
@@ -93,12 +84,11 @@ router.post('/submit', async (req, res) => {
   
       console.log(`Final unique group code: ${uniqueGroupCode}`);
   
-      // Create the new group
       const newGroup = new Group({
         name: groupName,
         groupCode: uniqueGroupCode,
         createdBy: userId,
-        members: [userId], // Add the creator only once
+        members: [userId],
         createdAt: Date.now(),
       });
   
@@ -121,10 +111,6 @@ router.post('/submit', async (req, res) => {
       res.status(500).json({ error: 'Failed to create group' });
     }
   });
-  
-  
-  
-  
 
 router.get('/current-user', authMiddleware, async (req, res) => {
     try {
@@ -134,15 +120,14 @@ router.get('/current-user', authMiddleware, async (req, res) => {
         return res.status(400).json({ error: 'Invalid token or user not found' });
       }
   
-      res.status(200).json({ userId }); // Respond with the user ID
+      res.status(200).json({ userId });
     } catch (error) {
       console.error('Error fetching current user:', error.message);
       res.status(500).json({ error: 'Failed to fetch current user' });
     }
   });
 
-
-  router.get('/group-averages/:groupCode', authMiddleware, async (req, res) => {
+router.get('/group-averages/:groupCode', authMiddleware, async (req, res) => {
     const { groupCode } = req.params;
   
     try {
@@ -169,8 +154,8 @@ router.get('/current-user', authMiddleware, async (req, res) => {
       res.status(500).json({ error: 'An error occurred while calculating averages' });
     }
   });
-  
-  router.get('/generate-playlist/:groupCode', authMiddleware, async (req, res) => {
+
+router.get('/generate-playlist/:groupCode', authMiddleware, async (req, res) => {
     const { groupCode } = req.params;
     const userId = req.user.id;
   
@@ -182,7 +167,6 @@ router.get('/current-user', authMiddleware, async (req, res) => {
   
       const surveyHandler = new GroupSurveyHandler();
   
-      // Check group completion
       const groupStatus = await surveyHandler.checkGroupCompletion(groupCode);
       if (!groupStatus.complete) {
         return res.status(400).json({
@@ -193,7 +177,6 @@ router.get('/current-user', authMiddleware, async (req, res) => {
         });
       }
   
-      // Generate the playlist
       const playlistDetails = await surveyHandler.createGroupPlaylist(groupCode, user);
   
       console.log("Playlist generated successfully");
@@ -223,5 +206,49 @@ router.get('/current-user', authMiddleware, async (req, res) => {
       res.status(500).json({ error: 'Failed to generate playlist' });
     }
   });
-  
-  module.exports = router;
+
+router.get('/group-album-wall/:groupCode', authMiddleware, async (req, res) => {
+    const { groupCode } = req.params;
+
+    try {
+      const surveyHandler = new GroupSurveyHandler();
+      const albumWall = await surveyHandler.getGroupAlbumWall(groupCode);
+
+      res.status(200).json({
+        message: 'Successfully generated album wall',
+        groupCode,
+        albumWall,
+      });
+    } catch (error) {
+      console.error('Error generating album wall:', error);
+      if (error.message === 'Group not found') {
+        return res.status(404).json({ error: 'Group not found' });
+      }
+      if (error.message === 'No users found in group') {
+        return res.status(400).json({ error: 'No users found in group to generate album wall' });
+      }
+      res.status(500).json({ error: 'Failed to generate album wall' });
+    }
+});
+
+router.get('/check-group-completion/:groupCode', authMiddleware, async (req, res) => {
+    const { groupCode } = req.params;
+
+    try {
+      const surveyHandler = new GroupSurveyHandler();
+      const groupStatus = await surveyHandler.checkGroupCompletion(groupCode);
+
+      res.status(200).json({
+        message: 'Group completion status retrieved successfully',
+        groupStatus,
+      });
+    } catch (error) {
+      console.error('Error checking group completion:', error);
+      if (error.message === 'Group not found') {
+        return res.status(404).json({ error: 'Group not found' });
+      }
+      res.status(500).json({ error: 'Failed to check group completion' });
+    }
+});
+
+module.exports = router;
