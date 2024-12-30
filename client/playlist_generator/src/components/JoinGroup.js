@@ -1,26 +1,31 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate for navigation
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
+import Alert from '@mui/material/Alert';
 
 const JoinGroup = () => {
   const [groupCode, setGroupCode] = useState(''); // State for group code input
   const [message, setMessage] = useState(''); // State for status messages
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
 
   const joinGroup = async () => {
     if (!groupCode) {
       setMessage('Please enter a group code!');
       return;
     }
-  
+
     const token = localStorage.getItem('token'); // Retrieve the user's token
     if (!token) {
       setMessage('Please log in to join a group.');
       return;
     }
-  
+
     try {
-      const response = await axios.post(
+      await axios.post(
         'http://localhost:5000/api/groups/join',
         { groupCode }, // Request body
         {
@@ -30,12 +35,9 @@ const JoinGroup = () => {
           },
         }
       );
-  
-      navigate(`/survey/${groupCode}`); 
-      const data = response.data;
 
+      navigate(`/album-wall/${groupCode}`);
     } catch (error) {
-      // Handle error response
       if (error.response) {
         setMessage(error.response.data.error || 'Failed to join the group');
       } else if (error.request) {
@@ -46,20 +48,58 @@ const JoinGroup = () => {
       console.error('Error:', error);
     }
   };
-  
 
   return (
-    <div>
-      <h2>Join a Group</h2>
-      <input
-        type="text"
-        placeholder="Enter group code"
+    <Box
+      display="flex"
+      flexDirection="column"
+      alignItems="center"
+      justifyContent="center"
+      sx={{
+        width: '100%',
+        maxWidth: 500,
+        margin: '0 auto',
+        padding: 4,
+        border: '1px solid #ccc',
+        borderRadius: 2,
+        boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)',
+      }}
+    >
+      <Typography
+        variant="h4"
+        component="h1"
+        gutterBottom
+        marginTop={'-11px'}
+        sx={{ fontSize: '1.5rem' }} 
+      >
+        Join a Group
+      </Typography>
+
+      {message && (
+        <Alert severity="info" sx={{ mb: 2, width: '100%' }}>
+          {message}
+        </Alert>
+      )}
+
+      <TextField
+        fullWidth
+        label="Group Code"
+        variant="outlined"
         value={groupCode}
         onChange={(e) => setGroupCode(e.target.value)}
+        sx={{ mb: 2 }}
       />
-      <button onClick={joinGroup}>Join Group</button>
-      {message && <p>{message}</p>}
-    </div>
+
+      <Button
+        fullWidth
+        variant="contained"
+        color="primary"
+        onClick={joinGroup}
+        sx={{ mb: 2, backgroundColor: '#1DB954' }}
+      >
+        Join Group
+      </Button>
+    </Box>
   );
 };
 

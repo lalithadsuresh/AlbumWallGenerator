@@ -1,17 +1,26 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Typography from '@mui/material/Typography';
+import Alert from '@mui/material/Alert';
+import Avatar from '@mui/material/Avatar';
 
 const Login = () => {
   const [message, setMessage] = useState(''); // State for displaying messages
   const [profile, setProfile] = useState(null); // State to store the user profile
   const [isLoggedIn, setIsLoggedIn] = useState(false); // Track login state
+  const navigate = useNavigate();
 
-  // Redirect to Spotify login
   const handleSpotifyLogin = () => {
     window.location.href = 'http://localhost:5000/api/users/login'; // Redirect to Spotify login route
   };
 
-  // Validate the token and fetch the user profile
+  const handleAfterLogin = () => {
+    navigate('/home'); // Redirect to Spotify login route
+  };
+
   const validateTokenAndFetchProfile = async () => {
     const token = localStorage.getItem('token');
     console.log('Token:', token);
@@ -23,55 +32,140 @@ const Login = () => {
     }
 
     try {
-      // Validate token and fetch profile
       const response = await axios.get('http://localhost:5000/api/users/profile', {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      setProfile(response.data); // Store user profile
+      setProfile(response.data);
       setMessage('Welcome back!');
       setIsLoggedIn(true);
     } catch (error) {
-      setMessage(
-        error.response?.data.error || 'Session expired. Please log in again.'
-      );
+      setMessage(error.response?.data.error || 'Session expired. Please log in again.');
       setIsLoggedIn(false);
-      localStorage.removeItem('token'); // Clear invalid token
+      localStorage.removeItem('token');
     }
   };
 
-  // Handle token in the callback URL and validate it
   useEffect(() => {
     const queryParams = new URLSearchParams(window.location.search);
     const token = queryParams.get('token');
 
     if (token) {
-      localStorage.setItem('token', token); // Save token in localStorage
+      localStorage.setItem('token', token);
       console.log('Token stored:', token);
-      window.history.replaceState({}, document.title, '/'); // Clean up URL
-      validateTokenAndFetchProfile(); // Validate and fetch profile
+      window.history.replaceState({}, document.title, '/');
+      validateTokenAndFetchProfile();
     } else {
-      validateTokenAndFetchProfile(); // Check token on every route
+      validateTokenAndFetchProfile();
     }
   }, []);
 
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    setProfile(null);
+    setIsLoggedIn(false);
+    setMessage('You have been logged out.');
+  };
+
   return (
-    <div>
-      <h2>Login with Spotify</h2>
-      {!isLoggedIn && <button onClick={handleSpotifyLogin}>Log in with Spotify</button>}
-      {isLoggedIn && <button onClick={validateTokenAndFetchProfile}>Fetch Profile</button>}
-      {message && <p>{message}</p>}
-      {profile && (
-        <div>
-          <h3>Profile Data:</h3>
-          <p>Name: {profile.display_name}</p>
-          <p>Email: {profile.email}</p>
-          {profile.images && profile.images[0] && (
-            <img src={profile.images[0]?.url} alt="Profile" width={100} />
-          )}
-        </div>
+    <Box
+      display="flex"
+      flexDirection="column"
+      alignItems="center"
+      justifyContent="center"
+      sx={{
+        width: '100%',
+        maxWidth: 500,
+        margin: '0 auto',
+        padding: 4,
+        border: '1px solid #ccc',
+        borderRadius: 2,
+        boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)',
+        marginTop: '50px',
+        marginBottom: '100px'
+      }}
+    >
+      <Typography variant="h4" component="h1" gutterBottom sx={{ fontSize: '1.5rem' }}>
+        Login with Spotify
+      </Typography>
+
+      {message && (
+        <Alert severity={isLoggedIn ? 'success' : 'info'} sx={{ mb: 2, width: '100%' }}>
+          {message}
+        </Alert>
       )}
-    </div>
+
+      {!isLoggedIn && (
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleSpotifyLogin}
+          fullWidth
+          sx={{
+            backgroundColor: '#1DB954',
+            color: '#fff',
+            '&:hover': { backgroundColor: '#1AAE4A' },
+            mb: 2,
+          }}
+        >
+          Log in with Spotify
+        </Button>
+      )}
+
+      {isLoggedIn && (
+        <Button
+        variant="contained"
+        onClick={handleAfterLogin}
+        fullWidth
+        sx={{ mb: 2, backgroundColor: '#1DB954'}}
+        >
+        Generate your Album Wall!
+        </Button> 
+      )}
+
+      {isLoggedIn && (
+        <Button
+          variant="contained"
+          color="secondary"
+          onClick={handleLogout}
+          fullWidth
+          sx={{ mb: 2 }}
+        >
+          Log out
+        </Button>
+
+      )}
+
+
+      {profile && (
+        <Box
+          display="flex"
+          flexDirection="column"
+          alignItems="center"
+          sx={{
+            mt: 5, 
+            mb: 6,
+            padding: 2,
+            border: '1px solid #ccc',
+            borderRadius: 2,
+            boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)',
+          }}
+        >
+          <Typography variant="h5" component="h2" sx={{ mb: 2, fontSize: '1.25rem' }}>
+            Your Profile
+          </Typography>
+          {profile.images && profile.images[0] && (
+            <Avatar
+              src={profile.images[0]?.url}
+              alt="Profile"
+              sx={{ width: 100, height: 100, mb: 2 }}
+            />
+          )}
+          <Typography>Name: {profile.display_name}</Typography>
+          <Typography>Email: {profile.email}</Typography>
+        </Box>
+      )}
+    </Box>
   );
 };
 

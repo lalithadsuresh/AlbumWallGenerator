@@ -1,0 +1,51 @@
+#container {
+  width: 400px; /* Room's width */
+  height: 400px; /* Room's height */
+  position: relative;
+  perspective: 1000px; /* Perspective for the 3D effect */
+  margin: 100px auto; /* Center the room on the page */
+}
+
+#room {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  transform-style: preserve-3d;
+  transform: rotateX(-10deg) rotateY(-30deg);
+}
+
+#room figure {
+  margin: 0;
+  position: absolute;
+  width: 100%; 
+  height: 100%; 
+  border: 1px solid rgba(0, 128, 0, 0.5); 
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  backface-visibility: hidden; 
+}
+
+
+.wall {
+  display: flex; 
+  flex-wrap: wrap; 
+  gap: 10px; 
+  padding: 20px; 
+}
+
+.wall-item {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 80px; 
+  height: 80px; 
+  overflow: hidden;
+  background: white; 
+}
+
+.album-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}

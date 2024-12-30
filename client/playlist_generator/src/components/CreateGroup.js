@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
+import Alert from '@mui/material/Alert';
 
 const CreateGroup = () => {
   const [groupName, setGroupName] = useState('');
@@ -64,17 +69,33 @@ const CreateGroup = () => {
   };
 
   return (
-    <div>
-      <h2>Create a New Group</h2>
-      <input
-        type="text"
-        placeholder="Enter group name"
+    <Box sx={{ maxWidth: 500, mx: 'auto', mt: 4, p: 2, border: '1px solid #ccc', borderRadius: 2 }}>
+      <Typography variant="h5" component="h2" align="center" gutterBottom>
+        Create a New Group
+      </Typography>
+      <TextField
+        fullWidth
+        label="Enter group name"
+        variant="outlined"
         value={groupName}
         onChange={(e) => setGroupName(e.target.value)}
+        sx={{ mb: 2 }}
       />
-      <button onClick={createGroup}>Create Group</button>
-      {message && <p>{message}</p>}
-    </div>
+      <Button
+        fullWidth
+        variant="contained"
+        color="primary"
+        onClick={createGroup}
+        sx={{ mb: 2, backgroundColor: '#1DB954' }}
+      >
+        Create Group
+      </Button>
+      {message && (
+        <Alert severity={message.startsWith('Group created') ? 'success' : 'error'}>
+          {message}
+        </Alert>
+      )}
+    </Box>
   );
 };
 
