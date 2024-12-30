@@ -3,7 +3,7 @@ const querystring = require('querystring');
 const User = require('../Models/userModel');
 require('dotenv').config();
 
-const refreshToken = async (req, res, next) => {
+const refreshTokenMiddleware = async (req, res, next) => {
   const userId = req.user.id;
 
   try {
@@ -15,13 +15,11 @@ const refreshToken = async (req, res, next) => {
 
     const { accessToken, refreshToken, tokenExpiry } = user;
 
-    // Check if token is still valid
     if (Date.now() < tokenExpiry) {
-      req.accessToken = accessToken; // Token is valid, proceed
+      req.accessToken = accessToken;
       return next();
     }
 
-    // Token is expired, refresh it
     const response = await axios.post(
       'https://accounts.spotify.com/api/token',
       querystring.stringify({
@@ -37,12 +35,11 @@ const refreshToken = async (req, res, next) => {
 
     const { access_token, expires_in } = response.data;
 
-    // Update the user's tokens in the database
     user.accessToken = access_token;
     user.tokenExpiry = Date.now() + expires_in * 1000;
     await user.save();
 
-    req.accessToken = access_token; // Pass the new access token to the next middleware
+    req.accessToken = access_token;
     next();
   } catch (error) {
     console.error('Error refreshing token:', error.message);
@@ -50,4 +47,4 @@ const refreshToken = async (req, res, next) => {
   }
 };
 
-module.exports = refreshToken;
+module.exports = refreshTokenMiddleware;

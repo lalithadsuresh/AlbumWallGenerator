@@ -5,8 +5,11 @@ import './AlbumWall.css'; // Assuming this file contains your styles
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
+import { useLocation } from 'react-router-dom';
 
 const AlbumWall = () => {
+  const location = useLocation();
+  const groupName = location.state?.groupName; 
   const { groupCode } = useParams();
   const navigate = useNavigate(); // To reload the page
   const [albumWall, setAlbumWall] = useState([]);
@@ -83,10 +86,10 @@ const AlbumWall = () => {
         }}
       >
         <Typography variant="h5" component="h2" sx={{ fontWeight: 'bold', mb: 1 }}>
-          Group Code: <strong>{groupCode}</strong>
+          <strong>{groupName}</strong>'s Album Wall
         </Typography>
         <Typography variant="body1">
-          Invite your friends using this group code to contribute to the album wall!
+          Invite your friends using the group code <strong> {groupCode} </strong> to contribute to the album wall!
         </Typography>
       </Box>
 

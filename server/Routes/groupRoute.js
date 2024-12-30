@@ -1,11 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const Group = require('../Models/groupModel'); 
-const Survey = require('../Models/surveyModel')
 const User = require('../Models/userModel');
 const authMiddleware = require('../utils/MiddlewareAuth'); 
-const refreshTokenMiddleware = require('../utils/RefreshToken'); 
 const GroupSurveyHandler = require('../utils/GroupSurveyHandler');
+const isTokenValid = require('../utils/GroupSurveyHandler');
 
 router.post('/join', authMiddleware, async (req, res) => {
     const { groupCode } = req.body;
@@ -127,33 +126,67 @@ router.get('/current-user', authMiddleware, async (req, res) => {
     }
   });
 
-router.get('/group-averages/:groupCode', authMiddleware, async (req, res) => {
+
+
+  router.get('/debug', authMiddleware, async (req, res) => {
+    try {
+      // Retrieve token from request headers
+      const token = req.headers.authorization?.split(' ')[1];
+      console.log(token);
+  
+      if (!token) {
+        return res.status(400).json({ error: 'Access token is missing' });
+      }
+  
+      // Make the Spotify API request using the provided token
+      const response = await axios.get('https://api.spotify.com/v1/me', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
+      console.log('Spotify Profile:', response.data);
+  
+      res.status(200).json({
+        message: 'Spotify profile fetched successfully',
+        profile: response.data,
+      });
+    } catch (error) {
+      console.error('Error fetching Spotify profile:', error.response?.data || error.message);
+      res.status(500).json({ error: 'Failed to fetch Spotify profile' });
+    }
+  });
+
+  router.get('/group-album-wall/:groupCode', authMiddleware, async (req, res) => {
     const { groupCode } = req.params;
   
     try {
       const surveyHandler = new GroupSurveyHandler();
-      const moodScores = await surveyHandler.calculateGroupMoodScores(groupCode);
   
+      // Fetch album wall for the group
+      const albumWall = await surveyHandler.getGroupAlbumWall(groupCode);
+  
+      // Return the generated album wall
       res.status(200).json({
+        message: 'Successfully generated album wall',
         groupCode,
-        averages: moodScores.averages,
-        totalResponses: moodScores.totalResponses,
-        individualScores: moodScores.individualScores
+        albumWall,
       });
-  
     } catch (error) {
-      console.error('Error calculating group averages:', error);
-      
+      console.error('Error generating album wall:', error);
+  
       if (error.message === 'Group not found') {
         return res.status(404).json({ error: 'Group not found' });
       }
-      if (error.message === 'No surveys found for this group') {
-        return res.status(400).json({ error: 'No survey responses found for this group' });
+      if (error.message === 'No users found in group') {
+        return res.status(400).json({ error: 'No users found in group to generate album wall' });
       }
-      
-      res.status(500).json({ error: 'An error occurred while calculating averages' });
+  
+      // General error fallback
+      res.status(500).json({ error: 'Failed to generate album wall' });
     }
   });
+  
 
 router.get('/generate-playlist/:groupCode', authMiddleware, async (req, res) => {
     const { groupCode } = req.params;
@@ -207,29 +240,6 @@ router.get('/generate-playlist/:groupCode', authMiddleware, async (req, res) => 
     }
   });
 
-router.get('/group-album-wall/:groupCode', authMiddleware, async (req, res) => {
-    const { groupCode } = req.params;
-
-    try {
-      const surveyHandler = new GroupSurveyHandler();
-      const albumWall = await surveyHandler.getGroupAlbumWall(groupCode);
-
-      res.status(200).json({
-        message: 'Successfully generated album wall',
-        groupCode,
-        albumWall,
-      });
-    } catch (error) {
-      console.error('Error generating album wall:', error);
-      if (error.message === 'Group not found') {
-        return res.status(404).json({ error: 'Group not found' });
-      }
-      if (error.message === 'No users found in group') {
-        return res.status(400).json({ error: 'No users found in group to generate album wall' });
-      }
-      res.status(500).json({ error: 'Failed to generate album wall' });
-    }
-});
 
 router.get('/check-group-completion/:groupCode', authMiddleware, async (req, res) => {
     const { groupCode } = req.params;

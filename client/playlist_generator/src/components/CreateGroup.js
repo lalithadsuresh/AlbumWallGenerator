@@ -5,6 +5,7 @@ import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import Alert from '@mui/material/Alert';
+import { useNavigate } from 'react-router-dom';
 
 const CreateGroup = () => {
   const [groupName, setGroupName] = useState('');
@@ -38,19 +39,21 @@ const CreateGroup = () => {
     fetchUser();
   }, []);
 
+  const navigate = useNavigate();
+
   // Function to create the group
   const createGroup = async () => {
     if (!groupName || !userId) {
       setMessage('Please enter a group name and ensure you are logged in.');
       return;
     }
-
+  
     const token = localStorage.getItem('token'); // Retrieve the token from local storage
     if (!token) {
       setMessage('Authentication token is missing. Please log in.');
       return;
     }
-
+  
     try {
       const response = await axios.post(
         'http://localhost:5000/api/groups/create-group',
@@ -61,7 +64,13 @@ const CreateGroup = () => {
           },
         }
       );
-      setMessage(`Group created successfully! Group Code: ${response.data.group.groupCode}`);
+  
+      const groupCode = response.data.group.groupCode;
+      setMessage(`Group created successfully! Group Code: ${groupCode}`);
+  
+      // Navigate to AlbumWall with groupName and groupCode
+
+      navigate(`/album-wall/${groupCode}`, { state: { groupName } });
     } catch (error) {
       console.error('Error creating group:', error.response?.data || error.message);
       setMessage('Error creating group');

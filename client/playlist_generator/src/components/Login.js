@@ -161,8 +161,7 @@ const Login = () => {
               sx={{ width: 100, height: 100, mb: 2 }}
             />
           )}
-          <Typography>Name: {profile.display_name}</Typography>
-          <Typography>Email: {profile.email}</Typography>
+          <Typography>{profile.display_name}</Typography>
         </Box>
       )}
     </Box>
