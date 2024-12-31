@@ -16,8 +16,8 @@ app.use('/api/groups', groupRoute);
 const port = process.env.PORT || 5000;
 const uri = process.env.ATLAS_URI;
 
-app.listen(port, function(req, res) {
-    console.log("Server running on port: " + port);
+app.listen(port, '0.0.0.0', function() {
+    console.log(`Server running on http://0.0.0.0:${port}`);
 });
 
 app.get("/", function(req, res) {
