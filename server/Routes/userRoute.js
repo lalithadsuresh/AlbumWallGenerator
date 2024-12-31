@@ -5,14 +5,16 @@ const axios = require("axios");
 const jwt = require("jsonwebtoken");
 const User = require("../Models/userModel");
 const GroupSurveyHandler = require("../utils/GroupSurveyHandler");
-const refreshTokenMiddleware = require("../utils/RefreshToken"); 
-const authMiddleware = require("../utils/MiddlewareAuth"); 
+const refreshTokenMiddleware = require("../utils/RefreshToken");
+const authMiddleware = require("../utils/MiddlewareAuth");
 
 // Environment Variables
 const client_secret = process.env.SPOTIFY_CLIENT_SECRET;
 const client_id = process.env.SPOTIFY_CLIENT_ID;
 const redirect_uri = process.env.SPOTIFY_REDIRECT_URI;
 const jwtSecret = process.env.JWT_SECRET;
+
+const reactBaseUrl = process.env.FRONTEND_URL;
 
 // Route: Redirect to Spotify Login
 router.get("/login", (req, res) => {
@@ -36,6 +38,7 @@ router.get("/login", (req, res) => {
   res.redirect(spotifyAuthUrl);
 });
 
+// Route: Delete Account
 router.delete('/delete-account', authMiddleware, async (req, res) => {
     try {
       const userId = req.user.id; // Extracted from the token in authMiddleware
@@ -92,7 +95,7 @@ router.get("/callback", async (req, res) => {
         displayName: userProfile.display_name,
         accessToken: access_token,
         refreshToken: refresh_token,
-        groupCode: `group_${Date.now()}`, 
+        groupCode: `group_${Date.now()}`,
         tokenExpiry: Date.now() + expires_in * 1000,
       },
       { upsert: true, new: true }
@@ -101,8 +104,8 @@ router.get("/callback", async (req, res) => {
     // Generate JWT token
     const token = jwt.sign({ id: user._id.toString() }, jwtSecret, { expiresIn: "1h" });
 
-    // Redirect to frontend with token
-    res.redirect(`http://localhost:3000/login?token=${token}`);
+    // Redirect to React frontend with token
+    res.redirect(`${reactBaseUrl}/login?token=${token}`);
   } catch (error) {
     console.error("Error in callback:", error.message);
     res.status(500).json({ error: "Failed to process callback" });

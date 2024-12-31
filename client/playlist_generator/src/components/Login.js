@@ -13,33 +13,61 @@ const Login = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false); // Track login state
   const navigate = useNavigate();
 
+  // Access the API base URL from environment variables
+  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
+  // Debugging: Log the API base URL to verify it's loaded correctly
+  useEffect(() => {
+    if (!API_BASE_URL) {
+      console.error(
+        "REACT_APP_API_BASE_URL is undefined. Ensure it's set correctly in your .env file and restart the server."
+      );
+    } else {
+      console.log("REACT_APP_API_BASE_URL:", API_BASE_URL);
+    }
+  }, [API_BASE_URL]);
+
   const handleSpotifyLogin = () => {
-    window.location.href = 'http://localhost:5000/api/users/login'; // Redirect to Spotify login route
+    if (!API_BASE_URL) {
+      console.error("API_BASE_URL is undefined, cannot redirect to Spotify login.");
+      setMessage("API_BASE_URL is not defined. Please contact support.");
+      return;
+    }
+    console.log(`Redirecting to Spotify login: ${API_BASE_URL}/api/users/login`);
+    window.location.href = `${API_BASE_URL}/api/users/login`;
   };
 
   const handleAfterLogin = () => {
-    navigate('/home'); // Redirect to Spotify login route
+    console.log("Navigating to /home");
+    navigate('/home');
   };
 
   const validateTokenAndFetchProfile = async () => {
     const token = localStorage.getItem('token');
-    console.log('Token:', token);
+    console.log('Token found in localStorage:', token);
 
     if (!token) {
+      console.warn("No token found. User is not logged in.");
       setMessage('No token found. Please log in.');
       setIsLoggedIn(false);
       return;
     }
 
     try {
-      const response = await axios.get('http://localhost:5000/api/users/profile', {
+      console.log(`Validating token with ${API_BASE_URL}/api/users/profile`);
+      const response = await axios.get(`${API_BASE_URL}/api/users/profile`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
+      console.log("Profile data fetched successfully:", response.data);
       setProfile(response.data);
       setMessage('Welcome back!');
       setIsLoggedIn(true);
     } catch (error) {
+      console.error(
+        "Error validating token or fetching profile:",
+        error.response?.data || error.message
+      );
       setMessage(error.response?.data.error || 'Session expired. Please log in again.');
       setIsLoggedIn(false);
       localStorage.removeItem('token');
@@ -47,15 +75,18 @@ const Login = () => {
   };
 
   useEffect(() => {
+    console.log("Checking for token in URL...");
     const queryParams = new URLSearchParams(window.location.search);
     const token = queryParams.get('token');
 
     if (token) {
+      console.log("Token found in URL:", token);
       localStorage.setItem('token', token);
-      console.log('Token stored:', token);
+      console.log("Token stored in localStorage:", token);
       window.history.replaceState({}, document.title, '/');
       validateTokenAndFetchProfile();
     } else {
+      console.log("No token found in URL. Validating existing token...");
       validateTokenAndFetchProfile();
     }
   }, []);
@@ -63,23 +94,24 @@ const Login = () => {
   const handleLogout = async () => {
     const token = localStorage.getItem('token');
     if (!token) {
+      console.warn("No active session found.");
       setMessage('No active session found.');
       return;
     }
-  
+
     try {
-      // Send delete account request to remove info from idling in database
-      await axios.delete('http://localhost:5000/api/users/delete-account', {
+      console.log(`Logging out and deleting account with ${API_BASE_URL}/api/users/delete-account`);
+      await axios.delete(`${API_BASE_URL}/api/users/delete-account`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-  
-      // Clear local storage and state
+
+      console.log("Account deleted successfully. Clearing session...");
       localStorage.removeItem('token');
       setProfile(null);
       setIsLoggedIn(false);
       setMessage('You have successfully logged out.');
     } catch (error) {
-      console.error('Error deleting account:', error.response?.data || error.message);
+      console.error("Error deleting account:", error.response?.data || error.message);
       setMessage('Failed to delete account. Please try again later.');
     }
   };
@@ -99,7 +131,7 @@ const Login = () => {
         borderRadius: 2,
         boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)',
         marginTop: '50px',
-        marginBottom: '100px'
+        marginBottom: '100px',
       }}
     >
       <Typography variant="h4" component="h1" gutterBottom sx={{ fontSize: '1.5rem' }}>
@@ -131,13 +163,13 @@ const Login = () => {
 
       {isLoggedIn && (
         <Button
-        variant="contained"
-        onClick={handleAfterLogin}
-        fullWidth
-        sx={{ mb: 2, backgroundColor: '#1DB954'}}
+          variant="contained"
+          onClick={handleAfterLogin}
+          fullWidth
+          sx={{ mb: 2, backgroundColor: '#1DB954' }}
         >
-        Generate your Album Wall!
-        </Button> 
+          Generate your Album Wall!
+        </Button>
       )}
 
       {isLoggedIn && (
@@ -150,9 +182,7 @@ const Login = () => {
         >
           Log out
         </Button>
-
       )}
-
 
       {profile && (
         <Box
@@ -160,7 +190,7 @@ const Login = () => {
           flexDirection="column"
           alignItems="center"
           sx={{
-            mt: 5, 
+            mt: 5,
             mb: 6,
             padding: 2,
             border: '1px solid #ccc',

@@ -12,7 +12,7 @@ function App() {
     <AuthProvider>
       <Router>
         <Routes>
-          <Route path="/" element={<Layout />}>
+          <Route path="/" element={<Layout />}> 
             <Route index element={<Navigate to="/home" />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/home" element={<Home />} />

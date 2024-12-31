@@ -26,7 +26,7 @@ const JoinGroup = () => {
 
     try {
       await axios.post(
-        'http://localhost:5000/api/groups/join',
+        `${process.env.REACT_APP_API_BASE_URL}/api/groups/join`,
         { groupCode }, // Request body
         {
           headers: {

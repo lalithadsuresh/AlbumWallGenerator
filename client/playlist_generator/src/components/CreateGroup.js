@@ -24,7 +24,7 @@ const CreateGroup = () => {
       }
 
       try {
-        const response = await axios.get('http://localhost:5000/api/groups/current-user', {
+        const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/groups/current-user`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -56,7 +56,7 @@ const CreateGroup = () => {
   
     try {
       const response = await axios.post(
-        'http://localhost:5000/api/groups/create-group',
+        `${process.env.REACT_APP_API_BASE_URL}/api/groups/create-group`,
         { groupName },
         {
           headers: {

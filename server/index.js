@@ -6,16 +6,12 @@ const groupRoute = require('./Routes/groupRoute');
 require("dotenv").config({ path: "../.env" }); 
 
 const app = express();
-require("dotenv").config();
 
 app.use(express.json()); 
-
 app.use(cors({
-    origin: 'https://album-wall-generator.vercel.app',
-    credentials: true, 
+    origin: process.env.REACT_APP_BASE_URL || 'http://localhost:3000', 
+    credentials: true,
 }));
-
-
 
 
 app.use("/api/users", userRoute);

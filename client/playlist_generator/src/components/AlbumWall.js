@@ -25,7 +25,7 @@ const AlbumWall = () => {
       const token = localStorage.getItem('token');
       try {
         const response = await axios.get(
-          `http://localhost:5000/api/groups/group-album-wall/${groupCode}`,
+          `${process.env.REACT_APP_API_BASE_URL}/api/groups/group-album-wall/${groupCode}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
