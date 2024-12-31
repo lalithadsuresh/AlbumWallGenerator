@@ -60,11 +60,28 @@ const Login = () => {
     }
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    setProfile(null);
-    setIsLoggedIn(false);
-    setMessage('You have been logged out.');
+  const handleLogout = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setMessage('No active session found.');
+      return;
+    }
+  
+    try {
+      // Send delete account request to remove info from idling in database
+      await axios.delete('http://localhost:5000/api/users/delete-account', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+  
+      // Clear local storage and state
+      localStorage.removeItem('token');
+      setProfile(null);
+      setIsLoggedIn(false);
+      setMessage('You have successfully logged out.');
+    } catch (error) {
+      console.error('Error deleting account:', error.response?.data || error.message);
+      setMessage('Failed to delete account. Please try again later.');
+    }
   };
 
   return (
@@ -161,7 +178,6 @@ const Login = () => {
               sx={{ width: 100, height: 100, mb: 2 }}
             />
           )}
-          <Typography>{profile.display_name}</Typography>
         </Box>
       )}
     </Box>

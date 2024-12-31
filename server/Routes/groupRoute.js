@@ -127,49 +127,26 @@ router.get('/current-user', authMiddleware, async (req, res) => {
   });
 
 
-
-  router.get('/debug', authMiddleware, async (req, res) => {
-    try {
-      // Retrieve token from request headers
-      const token = req.headers.authorization?.split(' ')[1];
-      console.log(token);
-  
-      if (!token) {
-        return res.status(400).json({ error: 'Access token is missing' });
-      }
-  
-      // Make the Spotify API request using the provided token
-      const response = await axios.get('https://api.spotify.com/v1/me', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-  
-      console.log('Spotify Profile:', response.data);
-  
-      res.status(200).json({
-        message: 'Spotify profile fetched successfully',
-        profile: response.data,
-      });
-    } catch (error) {
-      console.error('Error fetching Spotify profile:', error.response?.data || error.message);
-      res.status(500).json({ error: 'Failed to fetch Spotify profile' });
-    }
-  });
-
   router.get('/group-album-wall/:groupCode', authMiddleware, async (req, res) => {
     const { groupCode } = req.params;
   
     try {
       const surveyHandler = new GroupSurveyHandler();
   
+      // Fetch group details
+      const group = await Group.findOne({ groupCode }); // Assuming `Group` is your Group model
+      if (!group) {
+        return res.status(404).json({ error: 'Group not found' });
+      }
+  
       // Fetch album wall for the group
       const albumWall = await surveyHandler.getGroupAlbumWall(groupCode);
   
-      // Return the generated album wall
+      // Return the generated album wall with group name
       res.status(200).json({
         message: 'Successfully generated album wall',
         groupCode,
+        groupName: group.name, 
         albumWall,
       });
     } catch (error) {
@@ -184,59 +161,6 @@ router.get('/current-user', authMiddleware, async (req, res) => {
   
       // General error fallback
       res.status(500).json({ error: 'Failed to generate album wall' });
-    }
-  });
-  
-
-router.get('/generate-playlist/:groupCode', authMiddleware, async (req, res) => {
-    const { groupCode } = req.params;
-    const userId = req.user.id;
-  
-    try {
-      const user = await User.findById(userId);
-      if (!user) {
-        return res.status(404).json({ error: 'User not found' });
-      }
-  
-      const surveyHandler = new GroupSurveyHandler();
-  
-      const groupStatus = await surveyHandler.checkGroupCompletion(groupCode);
-      if (!groupStatus.complete) {
-        return res.status(400).json({
-          error: 'Not all members have submitted surveys',
-          totalMembers: groupStatus.totalMembers,
-          submittedCount: groupStatus.submittedCount,
-          remainingMembers: groupStatus.remainingMembers
-        });
-      }
-  
-      const playlistDetails = await surveyHandler.createGroupPlaylist(groupCode, user);
-  
-      console.log("Playlist generated successfully");
-      res.status(200).json({
-        message: 'Playlist created successfully',
-        playlist: {
-          id: playlistDetails.playlistId,
-          url: playlistDetails.playlistUrl,
-          tracks: playlistDetails.tracks,
-          trackCount: playlistDetails.trackCount
-        }
-      });
-  
-    } catch (error) {
-      console.error('Error generating playlist:', error);
-      
-      if (error.message === 'Group not found') {
-        return res.status(404).json({ error: 'Group not found' });
-      }
-      if (error.message === 'No recommended songs available') {
-        return res.status(400).json({ error: 'Unable to generate recommendations for this group' });
-      }
-      if (error.message === 'Invalid user object or missing Spotify ID') {
-        return res.status(400).json({ error: 'Invalid Spotify account connection' });
-      }
-      
-      res.status(500).json({ error: 'Failed to generate playlist' });
     }
   });
 

@@ -36,6 +36,23 @@ router.get("/login", (req, res) => {
   res.redirect(spotifyAuthUrl);
 });
 
+router.delete('/delete-account', authMiddleware, async (req, res) => {
+    try {
+      const userId = req.user.id; // Extracted from the token in authMiddleware
+      const deletedUser = await User.findByIdAndDelete(userId);
+  
+      if (!deletedUser) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+  
+      res.status(200).json({ message: 'Account deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting user:', error.message);
+      res.status(500).json({ error: 'Failed to delete account' });
+    }
+  });
+  
+
 // Route: Spotify Callback
 router.get("/callback", async (req, res) => {
   const code = req.query.code; // Authorization code from query params
@@ -73,7 +90,6 @@ router.get("/callback", async (req, res) => {
       {
         spotifyId: userProfile.id,
         displayName: userProfile.display_name,
-        email: userProfile.email,
         accessToken: access_token,
         refreshToken: refresh_token,
         groupCode: `group_${Date.now()}`, 

@@ -9,7 +9,7 @@ import { useLocation } from 'react-router-dom';
 
 const AlbumWall = () => {
   const location = useLocation();
-  const groupName = location.state?.groupName; 
+  const [groupName, setGroupName] = useState('');
   const { groupCode } = useParams();
   const navigate = useNavigate(); // To reload the page
   const [albumWall, setAlbumWall] = useState([]);
@@ -33,7 +33,9 @@ const AlbumWall = () => {
             },
           }
         );
-        setAlbumWall(response.data.albumWall || []);
+        const { albumWall, groupName } = response.data;
+        setAlbumWall(albumWall || []);
+        setGroupName(groupName);
       } catch (err) {
         console.error('Error fetching album wall:', err.response?.data || err.message);
         setError(err.response?.data?.error || 'Failed to load album wall');
@@ -128,7 +130,7 @@ const AlbumWall = () => {
         variant="contained"
         onClick={reloadPage}
         sx={{
-          mt: 4,
+          marginBottom: 6,
           backgroundColor: '#1DB954',
           '&:hover': { backgroundColor: '#1AAE4A' },
         }}
