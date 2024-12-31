@@ -8,8 +8,8 @@ import Box from '@mui/material/Box';
 import Alert from '@mui/material/Alert';
 
 const JoinGroup = () => {
-  const [groupCode, setGroupCode] = useState(''); // State for group code input
-  const [message, setMessage] = useState(''); // State for status messages
+  const [groupCode, setGroupCode] = useState(''); 
+  const [message, setMessage] = useState(''); 
   const navigate = useNavigate();
 
   const joinGroup = async () => {
@@ -18,7 +18,7 @@ const JoinGroup = () => {
       return;
     }
 
-    const token = localStorage.getItem('token'); // Retrieve the user's token
+    const token = localStorage.getItem('token'); 
     if (!token) {
       setMessage('Please log in to join a group.');
       return;
