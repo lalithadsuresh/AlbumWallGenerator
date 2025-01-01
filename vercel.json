@@ -1,1 +1,18 @@
-{ "rewrites": [{ "source": "/(.*)", "destination": "/" }] }
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "client/playlist_generator/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "client/playlist_generator/build"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/client/playlist_generator/build/$1"
+    }
+  ]
+}
