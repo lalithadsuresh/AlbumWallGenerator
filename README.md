@@ -9,6 +9,10 @@ room decor), I wondered if there was a way to gather inspiration as to what a wa
 
 I decided to create this application to generate inspiration for album walls, by using the Spotify API to query the user's top tracks and retrieve images of their top albums through their favorite music. I also realized that those with roommates, friends, or significant others might share the same spaces which would fit for a feature that combines the users' top tracks to create a group album wall. Upon this realization, I implemented a server for groups where users can join another user's group to contribute to an album wall. 
 
+## Use Cases
+
+I am currently in the process of cleaning up the backend to ensure I am following best practices before I submit my application to Spotify to get my API Quota extnesion approved! Until then, a demo is available on my personal website, so please feel free to check it out!
+
 # If you're curious :)
 
 This is what my generated album wall looks like!
