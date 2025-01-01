@@ -13,7 +13,7 @@ I decided to create this application to generate inspiration for album walls, by
 
 This is what my generated album wall looks like!
 
-![Lalith's Album Wall](./client/playlist_generator/public/Screenshot%202025-01-01%20at%203.36.52%20PM.png)
+![Lalith's Album Wall](client/playlist_generator/public/Screenshot%202025-01-01%20at%203.36.52%20PM.png)
 
 
 
