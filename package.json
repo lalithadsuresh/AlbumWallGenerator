@@ -4,13 +4,13 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server/index.js",  
+    "start": "node server/index.js",
     "heroku-postbuild": "NODE_CONFIG_PRODUCTION=false cd client/playlist_generator && npm install && npm run build"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
+  "engines": {
+    "node": "16.x",
+    "npm": "8.x"
+  },
   "dependencies": {
     "axios": "^1.7.7",
     "cors": "^2.8.5",
