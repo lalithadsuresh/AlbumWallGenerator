@@ -6,7 +6,7 @@
       "localhost",
       ".localhost"
     ],
-    "proxy": "https://localhost:3386/"
+    "proxy": "https://ancient-caverns-31836-82e4783994df.herokuapp.com/"
   },
   "private": true,
   "dependencies": {
