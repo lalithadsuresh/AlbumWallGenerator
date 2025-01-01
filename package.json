@@ -4,6 +4,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server/index.js",  
     "heroku-postbuild": "NODE_CONFIG_PRODUCTION=false cd client/playlist_generator && npm install && npm run build"
   },
   "keywords": [],
