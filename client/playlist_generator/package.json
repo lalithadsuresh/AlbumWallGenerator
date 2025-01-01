@@ -19,6 +19,7 @@
     "@testing-library/user-event": "^13.5.0",
     "@types/node": "^22.10.2",
     "axios": "^1.7.7",
+    "babel-preset-react-app": "^10.0.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.27.0",
@@ -50,6 +51,7 @@
     ]
   },
   "devDependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@types/react": "^19.0.2",
     "@types/react-dom": "^19.0.2",
     "webpack-dev-server": "^4.7.4"

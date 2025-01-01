@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import CreateGroup from './CreateGroup';
 import JoinGroup from './JoinGroup';
-import { Box, Button, Typography, Paper, Tabs, Tab } from '@mui/material';
+import { Box, Typography, Paper, Tabs, Tab } from '@mui/material';
 import Album from './photos/album.png';
 
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
@@ -42,7 +42,7 @@ const Login = () => {
     navigate('/home');
   };
 
-  const validateTokenAndFetchProfile = async () => {
+  const validateTokenAndFetchProfile = useCallback(async () => {
     const token = localStorage.getItem('token');
     console.log('Token found in localStorage:', token);
 
@@ -72,7 +72,7 @@ const Login = () => {
       setIsLoggedIn(false);
       localStorage.removeItem('token');
     }
-  };
+  }, [API_BASE_URL]);
 
   useEffect(() => {
     console.log("Checking for token in URL...");
@@ -84,12 +84,12 @@ const Login = () => {
       localStorage.setItem('token', token);
       console.log("Token stored in localStorage:", token);
       window.history.replaceState({}, document.title, '/');
-      validateTokenAndFetchProfile();
+      validateTokenAndFetchProfile(); // Use the memoized function
     } else {
       console.log("No token found in URL. Validating existing token...");
-      validateTokenAndFetchProfile();
+      validateTokenAndFetchProfile(); // Use the memoized function
     }
-  }, []);
+  }, [validateTokenAndFetchProfile]);
 
   const handleLogout = async () => {
     const token = localStorage.getItem('token');

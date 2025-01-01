@@ -5,10 +5,8 @@ import './AlbumWall.css'; // Assuming this file contains your styles
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
-import { useLocation } from 'react-router-dom';
 
 const AlbumWall = () => {
-  const location = useLocation();
   const [groupName, setGroupName] = useState('');
   const { groupCode } = useParams();
   const navigate = useNavigate(); // To reload the page
