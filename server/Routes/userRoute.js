@@ -71,7 +71,7 @@ router.get("/callback", async (req, res) => {
       querystring.stringify({
         grant_type: "authorization_code",
         code: code,
-        redirect_uri: redirect_uri,
+        redirect_uri: 'http://localhost:5000/api/users/callback',
         client_id: client_id,
         client_secret: client_secret,
       }),
