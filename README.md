@@ -15,7 +15,7 @@ I am currently in the process of submitting my application to Spotify to get my 
 
 # If you're curious :)
 
-This is what my generated album wall looks like!
+This is what my generated album wall looks like - please feel free to reach out if you see any albums on here that you love!
 
 ![Lalith's Album Wall](client/playlist_generator/public/album2.png)
 
