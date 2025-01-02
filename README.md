@@ -11,7 +11,11 @@ I decided to create this application to generate inspiration for album walls, by
 
 ## Use Cases
 
-I am currently in the process of submitting my application to Spotify to get my API Quota extnesion approved! Until then, a demo is available on my personal website, so please feel free to check it out!
+## Use Cases
+
+I am currently in the process of submitting my application to Spotify to get my API quota extension approved. While waiting for approval, you can check out a demo of the project on my [personal website](http://localhost:3000/LalithsPersonalWebsite#project).
+
+If you would like to explore the static website, it is deployed [here](https://album-wall-generator-yfvq-83m8qp6nw-lalithadsureshs-projects.vercel.app/home). Please note that the generator functionality is currently unavailable due to API restrictions.
 
 # If you're curious :)
 
