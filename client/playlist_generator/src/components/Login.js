@@ -91,35 +91,32 @@ const Login = () => {
     }
   }, [validateTokenAndFetchProfile]);
 
+  const spotifyLogoutUrl = "https://www.spotify.com/logout/";
+
   const handleLogout = async () => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      console.warn("No active session found.");
-      setMessage('No active session found.');
-      return;
-    }
-  
     try {
-      console.log(`Logging out and deleting account with ${API_BASE_URL}/api/users/delete-account`);
-      await axios.delete(`${API_BASE_URL}/api/users/delete-account`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-  
-      console.log("Account deleted successfully. Clearing session...");
-      localStorage.removeItem('token');
-      localStorage.clear(); 
+      const token = localStorage.getItem("token");
+      if (token) {
+        await axios.delete(`${API_BASE_URL}/api/users/delete-account`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      }
+
+      // Clear local session data
+      localStorage.removeItem("token");
+      localStorage.clear();
       setProfile(null);
       setIsLoggedIn(false);
-      setMessage('You have successfully logged out!');
-  
-      // Redirect to Spotify login page
-      console.log("Redirecting to Spotify login after logout.");
-      window.location.href = `${API_BASE_URL}/api/users/login`;
+      setMessage("You have successfully logged out.");
+
+      // Logout from Spotify and redirect back to login
+      window.location.href = spotifyLogoutUrl;
     } catch (error) {
-      console.error("Error deleting account:", error.response?.data || error.message);
-      setMessage('Failed to delete account. Please try again later.');
+      console.error("Error during logout:", error);
+      setMessage("Failed to log out. Please try again.");
     }
   };
+
 
   return (
     <Box
