@@ -98,18 +98,23 @@ const Login = () => {
       setMessage('No active session found.');
       return;
     }
-
+  
     try {
       console.log(`Logging out and deleting account with ${API_BASE_URL}/api/users/delete-account`);
       await axios.delete(`${API_BASE_URL}/api/users/delete-account`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
+  
       console.log("Account deleted successfully. Clearing session...");
       localStorage.removeItem('token');
+      localStorage.clear(); // Ensure all session-related data is cleared
       setProfile(null);
       setIsLoggedIn(false);
-      setMessage('You have successfully logged out.');
+      setMessage('You have successfully logged out!');
+  
+      // Redirect to Spotify login page
+      console.log("Redirecting to Spotify login after logout.");
+      window.location.href = `${API_BASE_URL}/api/users/login`;
     } catch (error) {
       console.error("Error deleting account:", error.response?.data || error.message);
       setMessage('Failed to delete account. Please try again later.');
