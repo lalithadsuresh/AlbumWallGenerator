@@ -107,7 +107,7 @@ const Login = () => {
   
       console.log("Account deleted successfully. Clearing session...");
       localStorage.removeItem('token');
-      localStorage.clear(); // Ensure all session-related data is cleared
+      localStorage.clear(); 
       setProfile(null);
       setIsLoggedIn(false);
       setMessage('You have successfully logged out!');
