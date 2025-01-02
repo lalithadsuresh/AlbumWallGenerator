@@ -11,7 +11,7 @@ I decided to create this application to generate inspiration for album walls, by
 
 ## Use Cases
 
-I am currently in the process of cleaning up the backend to ensure I am following best practices before I submit my application to Spotify to get my API Quota extnesion approved! Until then, a demo is available on my personal website, so please feel free to check it out!
+I am currently in the process of submitting my application to Spotify to get my API Quota extnesion approved! Until then, a demo is available on my personal website, so please feel free to check it out!
 
 # If you're curious :)
 
