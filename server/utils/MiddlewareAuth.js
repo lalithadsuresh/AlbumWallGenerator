@@ -6,6 +6,7 @@ const authenticateToken = (req, res, next) => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    //authentication required
     return res.status(401).json({ message: 'Unauthorized: Token missing or invalid' });
   }
 
@@ -16,6 +17,7 @@ const authenticateToken = (req, res, next) => {
     req.user = decoded; 
     next();
   } catch (error) {
+    // client lacks permission
     return res.status(403).json({ message: 'Forbidden: Token invalid or expired' });
   }
 };

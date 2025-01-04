@@ -1,7 +1,21 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-// User schema
+
+/*
+
+Group Schema keeps track of:
+-> generated group code that users can send to other users
+-> name they set for the group to pass on to frontend functions
+-> members / other users in the User model in the group
+-> who the group was created by  
+-> when group was created
+
+*/
+
+
+
+
 const UserSchema = new mongoose.Schema({
   spotifyId: { type: String, unique: true, required: true }, // Spotify user ID
   accessToken: { type: String, required: true }, // Spotify access token

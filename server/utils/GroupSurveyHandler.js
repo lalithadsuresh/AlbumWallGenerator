@@ -56,7 +56,16 @@ async function getTopTracks(accessToken) {
   }));
 }
 
+/**
+ * Class to handle group survey-related operations, including checking survey completion
+ * (which will be implemented in the future),
+ * fetching album data for group members, and generating an album cover wall.
+ */
+
 class GroupSurveyHandler {
+
+
+   // Checks if the user's access token is valid based on the token's expiry time.
 
   async isTokenValid(user) {
     if (!user.tokenExpiry || !(user.tokenExpiry instanceof Date)) {
@@ -69,7 +78,7 @@ class GroupSurveyHandler {
   } 
 
 
-
+  // Checks if all members of a group have submitted their surveys.
   async checkGroupCompletion(groupCode) {
     try {
       const group = await Group.findOne({ groupCode });
@@ -93,6 +102,9 @@ class GroupSurveyHandler {
       throw error;
     }
   }
+
+
+  // Retrieves the album data for all users in a group, ensuring valid access tokens.
 
   async getGroupAlbumWall(groupCode) {
     try {
@@ -152,11 +164,13 @@ class GroupSurveyHandler {
     }
   }
   
-  
 
+  //Creates a list of album covers for a group to generate a visual wall.
+   
   async createAlbumCoverWall(groupCode) {
     try {
       const albums = await this.getGroupAlbumWall(groupCode);
+      // returns albums each updated to only hold track name, artist name, and album cover 
       return albums.map(album => ({
         trackName: album.trackName,
         artistName: album.artistName,
@@ -168,6 +182,7 @@ class GroupSurveyHandler {
     }
   }
 }
+
 
 
 module.exports = GroupSurveyHandler;

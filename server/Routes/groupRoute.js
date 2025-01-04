@@ -5,6 +5,10 @@ const User = require('../Models/userModel');
 const authMiddleware = require('../utils/MiddlewareAuth');
 const GroupSurveyHandler = require('../utils/GroupSurveyHandler');
 
+
+
+// Route to join a group 
+
 router.post('/join', authMiddleware, async (req, res) => {
   const { groupCode } = req.body;
   const userId = req.user.id;
@@ -15,16 +19,19 @@ router.post('/join', authMiddleware, async (req, res) => {
       return res.status(404).json({ error: 'Group not found' });
     }
 
+    // if group doens't include current user trying to join, push to members
     if (!group.members.includes(userId)) {
       group.members.push(userId);
       await group.save();
     }
 
+    // see if user actually exists
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
 
+    // see if the user has a group code attached to their user model
     user.groupCodes = user.groupCodes || [];
     if (!user.groupCodes.includes(groupCode)) {
       user.groupCodes.push(groupCode);
@@ -40,6 +47,9 @@ router.post('/join', authMiddleware, async (req, res) => {
     res.status(500).json({ error: 'An error occurred while joining the group' });
   }
 });
+
+// For future developments in creating a survey to generate 
+// an album wall / playlist 
 
 router.post('/submit', async (req, res) => {
   const { groupCode, energy } = req.body;
@@ -57,6 +67,8 @@ router.post('/submit', async (req, res) => {
   }
 });
 
+// Route to allow user to create a group
+
 router.post('/create-group', authMiddleware, async (req, res) => {
   try {
     const { groupName } = req.body;
@@ -70,6 +82,7 @@ router.post('/create-group', authMiddleware, async (req, res) => {
     let uniqueGroupCode = Math.random().toString(36).substr(2, 8);
     let isUnique = false;
 
+    // check if there are any groups with a unique Group Code
     while (!isUnique) {
       const existingGroup = await Group.findOne({ groupCode: uniqueGroupCode });
       if (!existingGroup) {
@@ -82,6 +95,7 @@ router.post('/create-group', authMiddleware, async (req, res) => {
 
     console.log(`Final unique group code: ${uniqueGroupCode}`);
 
+    // create new Group model in database
     const newGroup = new Group({
       name: groupName,
       groupCode: uniqueGroupCode,
@@ -110,6 +124,8 @@ router.post('/create-group', authMiddleware, async (req, res) => {
   }
 });
 
+// Route to retrieve current user
+
 router.get('/current-user', authMiddleware, async (req, res) => {
   try {
     const userId = req.user.id;
@@ -125,10 +141,13 @@ router.get('/current-user', authMiddleware, async (req, res) => {
   }
 });
 
+// Route to generate album wall for user
+
 router.get('/group-album-wall/:groupCode', authMiddleware, async (req, res) => {
   const { groupCode } = req.params;
 
   try {
+    // initialize surveyHandler utility function (generates album wall)
     const surveyHandler = new GroupSurveyHandler();
 
     // Fetch group details

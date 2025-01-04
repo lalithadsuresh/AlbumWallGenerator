@@ -61,6 +61,7 @@ const Login = () => {
 
       console.log("Profile data fetched successfully:", response.data);
       setProfile(response.data);
+      // if you would like -> display name
       setMessage('Welcome back!');
       setIsLoggedIn(true);
     } catch (error) {

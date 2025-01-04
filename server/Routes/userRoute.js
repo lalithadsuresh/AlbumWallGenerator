@@ -16,15 +16,16 @@ const jwtSecret = process.env.JWT_SECRET;
 
 const reactBaseUrl = process.env.FRONTEND_URL;
 
-// Route: Redirect to Spotify Login
+
+// Login Route for User
 router.get("/login", (req, res) => {
   const scope = [
     "user-read-private",
     "user-read-email",
-    "playlist-modify-private",
-    "playlist-modify-public",
     "user-top-read",
-  ].join(" "); // Space-separated string for Spotify scopes.
+  ].join(" "); 
+
+  var state = generateRandomString(16);
 
   const spotifyAuthUrl =
     "https://accounts.spotify.com/authorize?" +
@@ -33,17 +34,23 @@ router.get("/login", (req, res) => {
       client_id: client_id,
       scope: scope,
       redirect_uri: redirect_uri,
+      state: state
     });
 
   res.redirect(spotifyAuthUrl);
 });
 
-// Route: Delete Account
+// delete account from User model when user logs out
+// uses authMiddleware to authorize web token
+
 router.delete('/delete-account', authMiddleware, async (req, res) => {
+    
     try {
       const userId = req.user.id; // Extracted from the token in authMiddleware
-      const deletedUser = await User.findByIdAndDelete(userId);
-  
+
+      // deletes user after log out
+      const deletedUser = await User.findByIdAndDelete(userId); 
+
       if (!deletedUser) {
         return res.status(404).json({ error: 'User not found' });
       }
@@ -56,7 +63,7 @@ router.delete('/delete-account', authMiddleware, async (req, res) => {
   });
   
 
-// Route: Spotify Callback
+// Spotify Callback route
 router.get("/callback", async (req, res) => {
   const code = req.query.code; // Authorization code from query params
 
@@ -65,7 +72,7 @@ router.get("/callback", async (req, res) => {
   }
 
   try {
-    // Exchange authorization code for tokens
+    // Exchange authorization code for tokens 
     const tokenResponse = await axios.post(
       "https://accounts.spotify.com/api/token",
       querystring.stringify({
@@ -112,7 +119,8 @@ router.get("/callback", async (req, res) => {
   }
 });
 
-// Route: Refresh Token
+// Refresh token (not sure if this is necesarry)
+
 router.post("/regenerate", async (req, res) => {
   const { refresh_token } = req.body;
 

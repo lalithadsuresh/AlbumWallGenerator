@@ -1,7 +1,17 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-// Group schema
+/*
+
+Group Schema keeps track of:
+-> generated group code that users can send to other users
+-> name they set for the group to pass on to frontend functions
+-> members / other users in the User model in the group
+-> who the group was created by  
+-> when group was created
+
+*/
+
 const GroupSchema = new mongoose.Schema({
   groupCode: { type: String, unique: true, required: true }, // Group code 
   name: { type: String, required: true }, // name of Group that User chose
